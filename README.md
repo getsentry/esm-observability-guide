@@ -105,88 +105,9 @@ libraries and observability libraries simultaneously.
 
 In the following sections, guidelines for different stakeholders are presented.
 
-### Meta-Framework Authors
-
-The core principle is to ensure that observability instrumentation is loaded before rest of the application runs.
-This is important as the observability library will register Node.js customization hooks.
-
-The Node customization hooks should be called in the entry point, and dynamic `import()` is used for loading code that
-should be run after the hooks are registered. This now dynamically `import()`ed code would be the previous server entry
-point.
-
-1. **Additional instrumentation file:** Let web application developers add an optional file `instrumentation.(ts|mjs)` (
-   optional possibility for different naming through a config option).
-2. **Add file to build output:** The instrumentation file must be present in the server-side build output
-3. **Update Server Entry (for preloading instrumentation):** Statically `import` the instrumentation file and
-   dynamically `import()` the previous server entry file
-
-#### Example
-
-The previous server entry (without instrumentation):
-
-```js 
-// build/server/index.mjs
-/* Any server code... */
-```
-
-Server entry with instrumentation:
-
-```js
-// build/server/index.mjs
-import './instrument.mjs'
-
-import('./server.mjs')
-```
-
-Several build tools will inline the content of the instrumentation file, so there will only be the dynamic `import()`
-present.
-
-### Node Library Authors
-
-#### 1. Node Diagnostics Channel
-
-The Node Diagnostics Channel provides a high-performance event channel for emitting data, introduced
-in [Node.js 15.1.0](https://nodejs.org/en/blog/release/v15.1.0).
-
-Emitting observability data through the diagnostics channel offers several key benefits:
-
-- **Performance**: Lightweight and built directly into Node.js
-- **Low Overhead**: Minimal performance impact compared to other instrumentation methods
-- **Universal Compatibility**: Works across different module systems (ESM and CJS)
-
-In order to let observability library authors consume those channels, follow the following implementation guidelines:
-
-- Create named channels that represent specific events or operations
-- Provide comprehensive documentation detailing:
-    - Channel names
-    - Event structures
-    - Example usage
-- Ensure consistent and meaningful data emission
-
-Emitting data through the Node diagnostics channel would also enable observability instrumentation in bundled code
-output and there is no need to preload instrumentation with `--import` or dynamic `import()`.
-
-While the Node Diagnostics Channel represents an ideal long-term solution, its widespread adoption faces challenges as
-already mentioned in the [general implementation requirements](#general-implementation-requirements) above:
-
-- Requires implementation in the Node.js library
-- Requires observability libraries to consume events publish on those channels
-- Requires all web application developers using this Node.js library to upgrade to this new version
-- Requires all web application developers to upgrade the observability library which is consuming those events
-
-#### 2. (optional) Emit OpenTelemetry Spans
-
-Although using the Node diagnostics channel is the preferred way as it's faster, Node library authors can also directly
-emit OpenTelemetry Spans themselves. Those spans can be picked up by other observability libraries.
-
-### Cloud Infrastructure Providers and Deployment Platforms
-
-- **Node CLI flag:** Offer the possibility to add an `--import` CLI flag to the Node command (scoped to the runtime)
-- **Node Bundlers:** The used Node bundler (nft, zisi, ...) must include files imported with `module.register` in the
-  build output.
-- **External File:** The used Node Bundler (nft, zisi, ...) must offer the possibility to include "external" files, that
-  cannot be detected through tracing the file dependencies (like an external `instrument.ts` which is only passed to
-  `--import`)
+- [Meta-Framework Authors](./guides/meta-framework-authors.md)
+- [Node Library Authors](./guides/node-library-authors.md)
+- [Cloud Infrastructure Providers and Deployment Platforms](./guides/infra-and-deployment-platform-providers.md)
 
 ## Reference
 
