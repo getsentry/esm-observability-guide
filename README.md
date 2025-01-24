@@ -106,7 +106,6 @@ Those are the recommended ways of preloading observability instrumentation (in n
 2. Defining an instrumentation hook which preloads instrumentation code at startup
 3. Combination of methods 1 and 2 described above: Defining an instrumentation hook inside an optional instrumentation
    file.
-4. Making use fo the Node Diagnostics Channel, where Node libraries can publish events to
 
 #### 1. Optional instrumentation file
 
