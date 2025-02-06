@@ -2,7 +2,7 @@
 
 Cloud infrastructure providers and deployment platforms play a crucial role in enabling seamless observability for
 modern JavaScript applications. To support ESM-based observability, these platforms must implement flexible runtime and
-build-time mechanisms.
+build-time mechanisms to let users specify a module via the `--import` flag.
 
 ## Runtime
 
@@ -18,4 +18,5 @@ Platforms must provide comprehensive support for the `--import` CLI flag, throug
 Node.js bundlers (such as nft, zisi) need enhanced functionality to handle modern observability scenarios:
 
 - Automatically detect and include files and packages imported via `module.register`
-- Provide flexible configuration for including auxiliary files from the build output like `instrumentation.mjs`
+- Provide flexible configuration to include auxiliary files from the build output such as `instrumentation.mjs` (which
+  can only be added via `--import` and cannot be referenced in the code)

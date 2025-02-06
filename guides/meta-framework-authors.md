@@ -3,9 +3,10 @@
 The core principle is to ensure that observability instrumentation is loaded before rest of the application runs.
 This is important as the observability library will register Node.js customization hooks.
 
-The Node customization hooks should be called in the entry point, and dynamic `import()` is used for loading code that
-should be run after the hooks are registered. This now dynamically `import()`ed code would be the previous server entry
-point.
+The observability instrumentation should be called and initialized in the entry point of the server. This will register
+the Node customization hook. Then a dynamic `import()` is used to load code to be executed after the hooks are
+registered. This essentially means that the code that is now dynamically `import()`ed is the previous server entry
+point (see example code below).
 
 1. **Additional instrumentation file:** Let web application developers add an optional file `instrumentation.(ts|mjs)` (
    optional possibility for different naming through a config option).
@@ -19,18 +20,19 @@ The previous server entry (without instrumentation):
 
 ```js 
 // build/server/index.mjs
+
 /* Any server code... */
 ```
 
-Server entry with instrumentation:
+Server entry file with instrumentation:
 
 ```js
 // build/server/index.mjs
-import './instrumentation.mjs'
+import './instrumentation.mjs';
 
-import('./server.mjs')
+import('./server.mjs'); // new file which contains code from previous index.mjs file
 ```
 
-Several build tools will inline the content of the instrumentation file, so there will only be the dynamic `import()`
-present.
+Several build tools will inline the content of the `instrumentation.mjs` file, so there won't necessarily be an external
+`instrumentation.mjs` file after building.
 

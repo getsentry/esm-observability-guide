@@ -1,8 +1,8 @@
-**⚠️ this guide is a work in progress**
-
 # ESM Observability Instrumentation Guide
 
 This guide describes a guide on enabling observability in an application which is using ECMAScript modules.
+
+[⬇️ Jump straight to Guidelines](#guidelines)
 
 In traditional CommonJS (CJS) module systems, developers could easily "monkey-patch" libraries during loading, allowing
 automatic instrumentation for performance tracking, error monitoring, and detailed tracing. The synchronous loading
@@ -24,7 +24,7 @@ landscape of ESM observability and have concrete strategies for implementation.
 ## Context
 
 ESM is becoming more and more a default in the server-side build output of frameworks. Here is an overview of popular
-Meta-Frameworks and their build output:
+Meta-Frameworks and their default build output:
 
 | Framework    |                                                                Weekly Download Numbers (rounded) |                                                                      Node Build Output                                                                      |
 |--------------|-------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------:|
@@ -86,15 +86,15 @@ using [customization hooks](https://nodejs.org/docs/v22.13.0/api/module.html#cus
   register
   the [Node Customization Hooks](https://nodejs.org/docs/v22.13.0/api/module.html#customization-hooks),
   observability instrumentation usually relies on for auto-instrumentation to "monkey-patch"). This preloading can be
-  achieved by:
+  achieved by **either**:
     - Passing an instrumentation file to the Node CLI flag `--import`
-    - The instrumentation is called at the entry point of the application and everything else is loaded with a dynamic
-      `import()`
+    - The instrumentation is called and initialized at the entry point of the application, and everything else (i.e. the
+      server code) is loaded with a dynamic `import()`
 
 **OR**
 
 - The Node Libraries are emitting events to the Node Diagnostics channel and the instrumentation picks this up
-    - The user is using the minimum version of the Node library which already makes use of the Node Diagnostics Channel
+    - The user must use the minimum version of the Node library which already makes use of the Node Diagnostics Channel
 
 Since the second approach is a great approach to work towards to, it requires a complex, sequential upgrade path:
 Node.js library authors must first implement diagnostics channel support, then observability library authors must update
