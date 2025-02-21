@@ -80,7 +80,9 @@ it can be done with `require()` in CJS).
 However, module loading can be customized
 with [customization hooks](https://nodejs.org/docs/v22.13.0/api/module.html#customization-hooks) using `register()` and
 `--import`. In observability instrumentation libraries, loader customization and interception is often done
-with [import-in-the-middle](https://www.npmjs.com/package/import-in-the-middle).
+with [import-in-the-middle](https://www.npmjs.com/package/import-in-the-middle) (e.g. in OpenTelemetry).
+`import-in-the-middle` works by wrapping modules in dummy modules that enable runtime modifications of exports,
+effectively working around ESM's external immutability constraints.
 
 ## General Implementation Requirements
 
