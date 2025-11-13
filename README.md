@@ -77,16 +77,20 @@ built.
 As the module graph is built before doing any evaluation, the static `import`s cannot be monkey-patched on-the-fly (like
 it can be done with `require()` in CJS).
 
-However, module loading can be customized
-with [customization hooks](https://nodejs.org/docs/latest-v22.x/api/module.html#customization-hooks) using `register()`
-(or `registerHooks()`). The module customization hooks need to be registered **before** any other module is loaded,
-which can be done by using
-[`--import`](https://nodejs.org/docs/latest-v22.x/api/cli.html#--importmodule) (or `--preload`
-in [Bun](https://bun.com/docs/runtime#param-preload)). In observability instrumentation
-libraries, loader customization and interception is often done
-with [import-in-the-middle](https://www.npmjs.com/package/import-in-the-middle) (e.g. in OpenTelemetry).
-`import-in-the-middle` works by wrapping modules in dummy modules that enable runtime modifications of exports,
-effectively working around ESM's external immutability constraints.
+### Customizing Module Loading
+
+While ESM's nature prevents direct monkey-patching of modules, Node.js provides a mechanism to intercept
+the module loading
+process: [Module Customization Hooks](https://nodejs.org/docs/latest-v22.x/api/module.html#customization-hooks)
+
+The customization hooks must be registered using `register()` (or `registerHooks()`) **before** any other application
+code is loaded. This is typically achieved by passing a file with the customization hook to the CLI using the [
+`--import`](https://nodejs.org/docs/latest-v22.x/api/cli.html#--importmodule) (or
+`--preload` in [Bun](https://bun.com/docs/runtime#param-preload)) flag.
+
+By registering its hook (`import-in-the-middle/hook.mjs`), ESM modules are wrapped in dummy modules during the loading
+phase. This enables runtime modifications to module exports, effectively working around ESM's immutability constraints
+to inject instrumentation code.
 
 ## General Implementation Requirements
 
