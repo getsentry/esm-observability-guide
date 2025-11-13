@@ -1,7 +1,9 @@
 # Meta-Framework Authors
 
 The core principle is to ensure that observability instrumentation is loaded before rest of the application runs.
-This is important as the observability library will register Node.js customization hooks.
+This is important as the OTel and any observability library depending on it will register Node.js Customization Hooks.
+
+## Implementation Approach
 
 The observability instrumentation should be called and initialized in the entry point of the server. This will register
 the Node customization hook. Then a dynamic `import()` is used to load code to be executed after the hooks are
@@ -36,3 +38,11 @@ import('./server.mjs'); // new file which contains code from previous index.mjs 
 Several build tools will inline the content of the `instrumentation.mjs` file, so there won't necessarily be an external
 `instrumentation.mjs` file after building.
 
+## Concrete Meta-Framework Examples
+
+- [Next.js instrumentation](https://nextjs.org/docs/app/guides/instrumentation)
+    - `instrumentation.ts`: Runs is preloaded on Vercel
+- [Integrated Observability in SvelteKit](https://svelte.dev/blog/sveltekit-integrated-observability)
+    - `instrumentation.server.ts`: statically `import`ed, while the rest of the server code is dynamically
+      `import()`ed (see function `create_instrumentation_facade`
+      in [the PR](https://github.com/sveltejs/kit/pull/13899))

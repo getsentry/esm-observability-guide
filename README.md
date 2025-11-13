@@ -78,32 +78,44 @@ As the module graph is built before doing any evaluation, the static `import`s c
 it can be done with `require()` in CJS).
 
 However, module loading can be customized
-with [customization hooks](https://nodejs.org/docs/v22.13.0/api/module.html#customization-hooks) using `register()` and
-`--import`. In observability instrumentation libraries, loader customization and interception is often done
+with [customization hooks](https://nodejs.org/docs/latest-v22.x/api/module.html#customization-hooks) using `register()`
+(or `registerHooks()`). The module customization hooks need to be registered **before** any other module is loaded,
+which can be done by using
+[`--import`](https://nodejs.org/docs/latest-v22.x/api/cli.html#--importmodule) (or `--preload`
+in [Bun](https://bun.com/docs/runtime#param-preload)). In observability instrumentation
+libraries, loader customization and interception is often done
 with [import-in-the-middle](https://www.npmjs.com/package/import-in-the-middle) (e.g. in OpenTelemetry).
 `import-in-the-middle` works by wrapping modules in dummy modules that enable runtime modifications of exports,
 effectively working around ESM's external immutability constraints.
 
 ## General Implementation Requirements
 
-- The setup code needed for any instrumentation should run **before the rest of the application** (this is needed to
-  register
+- The setup code needed for any instrumentation should run **before the rest of the application** (as mentioned above,
+  this is needed to register
   the [Node Customization Hooks](https://nodejs.org/docs/v22.13.0/api/module.html#customization-hooks),
   observability instrumentation usually relies on for auto-instrumentation to "monkey-patch"). This preloading can be
   achieved by **either**:
-    - Passing an instrumentation file to the Node CLI flag `--import`
-    - The instrumentation is called and initialized at the entry point of the application, and everything else (i.e. the
+    - Passing an instrumentation file to the Node CLI flag [
+      `--import`](https://nodejs.org/docs/latest-v22.x/api/cli.html#--importmodule) (or `--preload`
+      in [Bun](https://bun.com/docs/runtime#param-preload))
+    - The instrumentation is called and initialized at the entry point of the application (meaning, the module
+      customization hook runs at the beginning), and everything else (i.e. the
       server code) is loaded with a dynamic `import()`
 
 **OR**
 
-- The Node Libraries are emitting events to the Node Diagnostics channel and the instrumentation picks this up
+- The Node Libraries are emitting events to the
+  Node [Diagnostics Channel](https://nodejs.org/api/diagnostics_channel.html) and the instrumentation picks this up
     - The user must use the minimum version of the Node library which already makes use of the Node Diagnostics Channel
 
-Since the second approach is a great approach to work towards to, it requires a complex, sequential upgrade path:
-Node.js library authors must first implement diagnostics channel support, then observability library authors must update
-their tools to consume these new events, and finally, every web application developer must upgrade both their Node.js
-libraries and observability libraries simultaneously.
+---
+
+The second approach is a great approach to work towards to, but it requires a complex, sequential upgrade path:
+
+1. First, Node.js library authors must publish Diagnostics Channel events,
+2. then observability library authors must update their tools to subscribe to those new events
+3. and finally, every web application developer must upgrade both their Node.js
+   libraries and observability libraries to benefit from this.
 
 ## Guidelines
 
@@ -124,5 +136,8 @@ In the following sections, guidelines for different stakeholders are presented.
 - **Next.js Instrumentation Hook**
     - [Docs](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation)
     - [PR which adds this hook](https://github.com/vercel/next.js/pull/46002)
+- **SvelteKit Instrumentation File**
+    - [Blog Post](https://svelte.dev/blog/sveltekit-integrated-observability)
+    - [PR(https://github.com/sveltejs/kit/pull/13899)
 - **OTel**
     - [PR which adds ESM support](https://github.com/open-telemetry/opentelemetry-js/pull/3698)
